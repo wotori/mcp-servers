@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Literal
 from fastmcp import Context, FastMCP
 from fastmcp.exceptions import ToolError
-from pydantic import BaseModel, Field, ValidationError, conint, constr
+from pydantic import BaseModel, Field, ValidationError, ConfigDict
 
 from mcp_server_arxiv.arxiv import (
     _ArxivService,
@@ -50,11 +50,10 @@ mcp_server = FastMCP(
 
 # --- arxiv search tool input schema --- #
 class ArxivInput(BaseModel):
-    query: constr(min_length=3, max_length=512, strip_whitespace=True) = Field(..., description="Search query string")
-    max_results: conint(ge=1, le=50) = Field(default=5, description="Maximum number of results to return (default: 5, max: 50)")
-    max_text_length: conint(ge=100) =  Field(default=100, description="Maximum characters of extracted text per paper (default: unlimited, min: 100)")
-    class Config:        
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid") 
+    query: str = Field(..., min_length=3, max_length=512, json_schema_extra={"strip_whitespace": True})
+    max_results: int = Field(default=5, ge=1, le=50, description="Maximum number of results to return (default: 5, max: 50)")
+    max_text_length: int =  Field(default=100, ge=100, description="Maximum characters of extracted text per paper (default: unlimited, min: 100)")    
 
 # --- Tool Definitions --- #
 @mcp_server.tool()
